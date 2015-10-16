@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 2.8.3)
 
 cmake_policy(SET CMP0003 NEW)
 cmake_policy(SET CMP0005 NEW)
+cmake_policy(SET CMP0054 NEW)
 
 if(${CMAKE_MAJOR_VERSION} GREATER 2)
     cmake_policy(SET CMP0045 OLD)
@@ -76,8 +77,15 @@ else()
     set(MSYS_MAKEFILES false)
 endif()
 
-if(WIN32 AND MINGW)
-    set(COMPILER_FLAGS "${COMPILER_FLAGS} -Wa,-mbig-obj")
+if(CMAKE_GENERATOR MATCHES "Visual Studio*")
+endif()
+
+if(WIN32)
+	if(MINGW)
+    	set(COMPILER_FLAGS "${COMPILER_FLAGS} -Wa,-mbig-obj")
+	elseif(MSVC)
+		set(COMPILER_FLAGS "${COMPILER_FLAGS} /bigobj")
+	endif()
 endif()
 
 set(MINGW_ROOT "/mingw64/bin")
@@ -94,6 +102,7 @@ if(WIN32)
         ${MINGW_ROOT}/libgcc_s_seh-1.dll
         ${MINGW_ROOT}/libstdc++-6.dll
         ${MINGW_ROOT}/libeay32.dll)
+    message("${INSTALLATION_SYSTEM_BINARY_FILES}")
 else()
     if(EXISTS ${CMAKE_SOURCE_DIR}/deps/local/lib64/libgomp.so.1)
         list(APPEND INSTALLATION_SYSTEM_BINARY_FILES ${CMAKE_SOURCE_DIR}/deps/local/lib64/libgomp.so.1)
@@ -139,6 +148,11 @@ else()
     add_library(openmp INTERFACE)
     target_compile_definitions(openmp INTERFACE __NO_OPENMP__)
     message(WARNING "OpenMP Libraries Not Found")
+endif()
+
+find_package(OpenMP)
+if(OPENMP_FOUND)
+	message("OpenMP!!!")
 endif()
 
 #***********************************#
